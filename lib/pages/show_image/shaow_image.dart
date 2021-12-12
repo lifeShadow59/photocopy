@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:copyrightapp/const/svg_const.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart';
 
 class ShowImage extends StatelessWidget {
   const ShowImage({Key? key, required this.showPhoto}) : super(key: key);
@@ -69,26 +71,29 @@ class ShowImage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30.0),
                         color: Colors.white,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          SvgPicture.asset(
-                            SVGConst.save,
-                            width: 15,
-                            height: 15,
-                          ),
-                          const SizedBox(
-                            width: 10,
-                          ),
-                          const Text(
-                            "Save",
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
+                      child: InkWell(
+                        onTap: saveFile,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            SvgPicture.asset(
+                              SVGConst.save,
+                              width: 15,
+                              height: 15,
                             ),
-                          ),
-                        ],
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            const Text(
+                              "Save",
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     Row(
@@ -120,5 +125,15 @@ class ShowImage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> saveFile() async {
+    late String path;
+    await getApplicationDocumentsDirectory().then((value) => path = value.path);
+    debugPrint(path);
+    final fileName = basename(showPhoto.path);
+    await showPhoto.copy('$path/$fileName');
+    debugPrint(showPhoto.path);
+    // showPhoto.
   }
 }
