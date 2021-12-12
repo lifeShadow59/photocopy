@@ -9,19 +9,21 @@ class Setting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        backgroundColor: const Color(0xFF443FCE),
-        extendBody: true,
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: const <Widget>[
-            PageAppBar(),
-            SizedBox(
-              height: 40,
-            ),
-            BottomPage()
-          ],
-        ));
+    return SafeArea(
+      child: Scaffold(
+          backgroundColor: const Color(0xFF443FCE),
+          extendBody: true,
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: const <Widget>[
+              PageAppBar(),
+              SizedBox(
+                height: 40,
+              ),
+              BottomPage()
+            ],
+          )),
+    );
   }
 }
 
@@ -155,7 +157,7 @@ class PageAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 50, left: 18, right: 18),
+      padding: const EdgeInsets.only(top: 50, left: 18),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -166,7 +168,7 @@ class PageAppBar extends StatelessWidget {
                 Navigator.pop(context);
               },
               child: SvgPicture.asset(
-                SVGConst.setting,
+                SVGConst.back,
                 width: 35,
                 height: 35,
               ),
@@ -189,9 +191,12 @@ class PageAppBar extends StatelessWidget {
               Text(
                 "Edit copyright text to apply on your image",
                 style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFFBAB8F1),
-                    fontWeight: FontWeight.w600),
+                  fontSize: 13,
+                  color: Color(0xFFBAB8F1),
+                  fontWeight: FontWeight.w600,
+                ),
+                softWrap: true,
+                overflow: TextOverflow.clip,
               )
             ],
           ),

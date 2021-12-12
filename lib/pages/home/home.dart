@@ -22,7 +22,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late File _originalImage;
   late File _watermarkImage;
-  File? _watermarkedImage;
   @override
   void initState() {
     super.initState();
@@ -100,12 +99,16 @@ class _HomePageState extends State<HomePage> {
     );
 
     File? withLogo = await setWaterMark(_originalImage, _watermarkImage, "hii");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const ShowImage(),
-      ),
-    );
+    if (withLogo != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShowImage(
+            showPhoto: withLogo,
+          ),
+        ),
+      );
+    }
   }
 
   Future<File?> setWaterMark(File _originalImage, File _watermarkImage,
