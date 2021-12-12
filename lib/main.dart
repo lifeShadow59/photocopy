@@ -1,4 +1,5 @@
 import 'package:copyrightapp/const/svg_const.dart';
+import 'package:copyrightapp/pages/setting/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -11,11 +12,47 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       useInheritedMediaQuery: true,
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        inputDecorationTheme: const InputDecorationTheme(
+          focusColor: Color(0xffFF5C5C),
+          isDense: true,
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.black38,
+            ),
+            borderRadius: BorderRadius.all(
+              Radius.circular(10.0),
+            ),
+          ),
+          labelStyle: TextStyle(
+            fontSize: 22, // 35
+            color: Colors.black,
+            fontWeight: FontWeight.w800,
+          ),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.black12,
+            ),
+            borderRadius: BorderRadius.all(
+              Radius.circular(10.0),
+            ),
+          ),
+          fillColor: Colors.red,
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.black38,
+            ),
+            borderRadius: BorderRadius.all(
+              Radius.circular(10.0),
+            ),
+          ),
+        ),
+      ),
       title: 'Copyright App',
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
@@ -117,10 +154,18 @@ class PageAppBar extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
-            child: SvgPicture.asset(
-              SVGConst.setting,
-              width: 35,
-              height: 35,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const Setting()),
+                );
+              },
+              child: SvgPicture.asset(
+                SVGConst.setting,
+                width: 35,
+                height: 35,
+              ),
             ),
           ),
         ],
