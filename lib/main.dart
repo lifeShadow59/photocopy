@@ -2,8 +2,10 @@ import 'package:copyrightapp/const/svg_const.dart';
 import 'package:copyrightapp/pages/setting/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get_storage/get_storage.dart';
 
-void main() {
+Future<void> main() async {
+  await GetStorage.init();
   runApp(const MyApp());
 }
 
@@ -17,8 +19,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         inputDecorationTheme: const InputDecorationTheme(
-          focusColor: Color(0xffFF5C5C),
-          isDense: true,
+          focusColor: Colors.black,
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: Colors.black38,
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
               Radius.circular(10.0),
             ),
           ),
-          fillColor: Colors.red,
+          fillColor: Colors.black,
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: Colors.black38,

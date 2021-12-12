@@ -2,6 +2,7 @@ import 'package:copyrightapp/const/svg_const.dart';
 import 'package:copyrightapp/utils/elevated_button_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get_storage/get_storage.dart';
 
 class Setting extends StatelessWidget {
   const Setting({Key? key}) : super(key: key);
@@ -24,19 +25,33 @@ class Setting extends StatelessWidget {
   }
 }
 
-class BottomPage extends StatelessWidget {
+class BottomPage extends StatefulWidget {
   const BottomPage({
     Key? key,
   }) : super(key: key);
 
   @override
+  State<BottomPage> createState() => _BottomPageState();
+}
+
+class _BottomPageState extends State<BottomPage> {
+  final TextEditingController _defaultTextController = TextEditingController();
+  final TextEditingController _emailTextController = TextEditingController();
+  final FocusNode _defaultFocusNode = FocusNode();
+  final FocusNode _emailTextFocusNode = FocusNode();
+  final GlobalKey<FormState> _formKey = GlobalKey();
+  final GetStorage _storage = GetStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _defaultTextController.text = _storage.read<String>('text') ?? '';
+    _emailTextController.text = _storage.read<String>('email') ?? '';
+    // _storage.read<bool>('emailShow');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final TextEditingController _defaultTextController =
-        TextEditingController();
-    final TextEditingController _emailTextController = TextEditingController();
-    final FocusNode _defaultFocusNode = FocusNode();
-    final FocusNode _emailTextFocusNode = FocusNode();
-    final GlobalKey<FormState> _formKey = GlobalKey();
     return Expanded(
       flex: 1,
       child: Container(
@@ -74,7 +89,7 @@ class BottomPage extends StatelessWidget {
                       Material(
                         elevation: _defaultFocusNode.hasFocus ? 10 : 0,
                         shadowColor: _defaultFocusNode.hasFocus
-                            ? Colors.red
+                            ? Colors.black54
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                         child: TextField(
@@ -99,7 +114,7 @@ class BottomPage extends StatelessWidget {
                       Material(
                         elevation: _emailTextFocusNode.hasFocus ? 10 : 0,
                         shadowColor: _emailTextFocusNode.hasFocus
-                            ? Colors.red
+                            ? Colors.black54
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
                         child: TextField(
@@ -112,7 +127,13 @@ class BottomPage extends StatelessWidget {
                         height: 100,
                       ),
                       ElevatedButtonWidget(
-                          title: "Submit", enable: true, onTap: () {})
+                          title: "Submit",
+                          enable: true,
+                          onTap: () {
+                            _storage.write('text', _defaultTextController.text);
+                            _storage.write('email', _emailTextController.text);
+                            setState(() {});
+                          })
                     ],
                   ),
                 )
