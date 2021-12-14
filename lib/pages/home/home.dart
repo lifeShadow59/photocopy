@@ -6,10 +6,12 @@ import 'package:copyrightapp/pages/setting/setting.dart';
 import 'package:copyrightapp/pages/show_image/shaow_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:developer' as developer;
 import 'package:image/image.dart' as ui;
 import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class HomePage extends StatefulWidget {
   const HomePage({
@@ -23,6 +25,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late File _originalImage;
   late File _watermarkImage;
+  final GetStorage _storage = GetStorage();
 
   @override
   void initState() {
@@ -96,7 +99,7 @@ class _HomePageState extends State<HomePage> {
       File? withLogo =
           await setWaterMark(_originalImage, _watermarkImage, "hii");
       if (withLogo != null) {
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ShowImage(
@@ -110,6 +113,29 @@ class _HomePageState extends State<HomePage> {
       image?.path ?? 'No picker Any Immage',
       name: 'openGallery Function',
     );
+  }
+
+  Future<String> getStringForWaterMark() async {
+    String text = '';
+    String email = '';
+    while (true) {
+      text = _storage.read<String>('text') ?? '';
+      email = _storage.read<String>('email') ?? '';
+      if (text == '') {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const Setting(),
+          ),
+        );
+      } else {
+        break;
+      }
+    }
+
+    String waterMarkString = '©Copyright ';
+    int year = DateTime.now().year;
+    return 'waterMarkString + $year ';
   }
 
   Future<File?> setWaterMark(File _originalImage, File _watermarkImage,
@@ -137,17 +163,18 @@ class _HomePageState extends State<HomePage> {
         _waterMarkString,
         color: 0xFF808080,
       );
-      ui.Image s = WriteImageInString.drowS(
-        originalImage,
-        ui.arial_48,
-        originalImage.width - 300,
-        originalImage.height - 100,
-        _waterMarkString,
-        color: 0xFF808080,
-      );
+      // ui.Image s = WriteImageInString.drowS(
+      //   originalImage,
+      //   ui.arial_48,
+      //   originalImage.width - 300,
+      //   originalImage.height - 100,
+      //   _waterMarkString,
+      //   color: 0xFF808080,
+      // );
+      final fileName = path.basename(_originalImage.path);
       final File watermarkedFile =
-          File('${(await getTemporaryDirectory()).path}/xyz');
-      await watermarkedFile.writeAsBytes(ui.encodeJpg(s));
+          File('${(await getTemporaryDirectory()).path}/$fileName');
+      await watermarkedFile.writeAsBytes(ui.encodeJpg(originalImage));
       return watermarkedFile;
     }
   }
@@ -203,7 +230,7 @@ class PageAppBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const <Widget>[
                 Text(
-                  "Select Opetion",
+                  "Select Option",
                   style: TextStyle(
                       fontSize: 25,
                       color: Colors.white,
@@ -213,7 +240,7 @@ class PageAppBar extends StatelessWidget {
                   height: 5,
                 ),
                 Text(
-                  "Select opetion to apply copyright on Image",
+                  "Select option to apply copyright on Image",
                   style: TextStyle(
                     fontSize: 13,
                     color: Color(0xFFBAB8F1),

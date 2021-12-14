@@ -11,18 +11,19 @@ class Setting extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          backgroundColor: const Color(0xFF443FCE),
-          extendBody: true,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: const <Widget>[
-              PageAppBar(),
-              SizedBox(
-                height: 40,
-              ),
-              BottomPage()
-            ],
-          )),
+        backgroundColor: const Color(0xFF443FCE),
+        extendBody: true,
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: const <Widget>[
+            PageAppBar(),
+            SizedBox(
+              height: 40,
+            ),
+            BottomPage()
+          ],
+        ),
+      ),
     );
   }
 }
@@ -43,13 +44,18 @@ class _BottomPageState extends State<BottomPage> {
   final FocusNode _emailTextFocusNode = FocusNode();
   final GlobalKey<FormState> _formKey = GlobalKey();
   final GetStorage _storage = GetStorage();
+  bool _emailShow = false;
+  bool _emailErrorShow = false;
+  bool _textErrorShow = false;
+  final RegExp emailValidation = RegExp(
+      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$");
 
   @override
   void initState() {
     super.initState();
     _defaultTextController.text = _storage.read<String>('text') ?? '';
     _emailTextController.text = _storage.read<String>('email') ?? '';
-    // _storage.read<bool>('emailShow');
+    _emailShow = _storage.read<bool>('emailShow') ?? false;
   }
 
   @override
@@ -76,12 +82,13 @@ class _BottomPageState extends State<BottomPage> {
                 const Text(
                   "Edit Default Text",
                   style: TextStyle(
-                      fontSize: 25,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500),
+                    fontSize: 22,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(
-                  height: 10,
+                  height: 9,
                 ),
                 Form(
                   key: _formKey,
@@ -100,42 +107,107 @@ class _BottomPageState extends State<BottomPage> {
                           cursorColor: Colors.black,
                         ),
                       ),
+                      _textErrorShow
+                          ? const Text(
+                              ' Value Can\'t Be Empty',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.red,
+                              ),
+                            )
+                          : const SizedBox(),
                       const SizedBox(
                         height: 35,
                       ),
-                      const Text(
-                        "Email",
-                        style: TextStyle(
-                            fontSize: 25,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          const Text(
+                            "Email",
+                            style: TextStyle(
+                              fontSize: 22,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Switch(
+                            onChanged: (bool value) {
+                              setState(() {
+                                _emailShow = value;
+                                _storage.write('emailShow', value);
+                              });
+                            },
+                            value: _emailShow,
+                            activeColor: const Color(0xFF443FCE),
+                          )
+                        ],
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      Material(
-                        elevation: _emailTextFocusNode.hasFocus ? 10 : 0,
-                        shadowColor: _emailTextFocusNode.hasFocus
-                            ? Colors.black54
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        child: TextField(
-                          controller: _emailTextController,
-                          focusNode: _emailTextFocusNode,
-                          cursorColor: Colors.black,
-                        ),
-                      ),
+                      _emailShow
+                          ? Material(
+                              elevation: _emailTextFocusNode.hasFocus ? 10 : 0,
+                              shadowColor: _emailTextFocusNode.hasFocus
+                                  ? Colors.black54
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              child: TextField(
+                                controller: _emailTextController,
+                                focusNode: _emailTextFocusNode,
+                                cursorColor: Colors.black,
+                              ),
+                            )
+                          : const SizedBox(),
+                      _emailShow
+                          ? _emailErrorShow
+                              ? const Text(
+                                  ' Your email is Wrong',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.red,
+                                  ),
+                                )
+                              : const SizedBox()
+                          : const SizedBox(),
                       const SizedBox(
                         height: 100,
                       ),
                       ElevatedButtonWidget(
-                          title: "Submit",
-                          enable: true,
-                          onTap: () {
-                            _storage.write('text', _defaultTextController.text);
-                            _storage.write('email', _emailTextController.text);
+                        title: "Submit",
+                        enable: true,
+                        onTap: () {
+                          bool emailISValid = emailValidation
+                                  .hasMatch(_emailTextController.text) &&
+                              _emailTextController.text != '';
+                          print(emailISValid);
+                          if (_defaultTextController.text == '' &&
+                              _emailShow &&
+                              !emailISValid) {
+                            _emailErrorShow = true;
+                            _textErrorShow = true;
                             setState(() {});
-                          })
+                            return;
+                          } else if (_emailShow && !emailISValid) {
+                            _emailErrorShow = true;
+                            setState(() {});
+                            return;
+                          } else if (_defaultTextController.text == '') {
+                            _textErrorShow = true;
+                            setState(() {});
+                            return;
+                          }
+                          print(
+                              "_emailTextController.text  ==> ${_emailTextController.text}");
+                          print(
+                              "emailValidation.hasMatch(_emailTextController.text) ==> ${emailValidation.hasMatch(_emailTextController.text)} ");
+
+                          if (_emailShow) {
+                            _storage.write('email', _emailTextController.text);
+                          }
+                          _storage.write('text', _defaultTextController.text);
+                          _storage.write('emailShow', _emailShow);
+                          setState(() {});
+                          Navigator.pop(context);
+                        },
+                      ),
                     ],
                   ),
                 )

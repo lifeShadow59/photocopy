@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:copyrightapp/const/svg_const.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ShowImage extends StatelessWidget {
   const ShowImage({Key? key, required this.showPhoto}) : super(key: key);
@@ -42,26 +44,29 @@ class ShowImage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        SvgPicture.asset(
-                          SVGConst.share,
-                          width: 16,
-                          height: 16,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        const Text(
-                          "Share",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w400,
+                    InkWell(
+                      onTap: shareFile,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          SvgPicture.asset(
+                            SVGConst.share,
+                            width: 16,
+                            height: 16,
                           ),
-                        ),
-                      ],
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          const Text(
+                            "Share",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 7),
@@ -127,12 +132,23 @@ class ShowImage extends StatelessWidget {
     );
   }
 
+  Future<void> shareFile() async {
+    print(showPhoto.path);
+    print(showPhoto.uri);
+    final fileName = basename(showPhoto.path);
+    print(fileName);
+    await Share.shareFiles([showPhoto.path], text: 'Great picture');
+  }
+
   Future<void> saveFile() async {
     late String path;
     await getApplicationDocumentsDirectory().then((value) => path = value.path);
     debugPrint(path);
     final fileName = basename(showPhoto.path);
     await showPhoto.copy('$path/$fileName');
+    await ImageGallerySaver.saveImage(await showPhoto.readAsBytes(),
+        quality: 100, name: fileName);
+    // byteData.buffer.asUint8List());
     debugPrint(showPhoto.path);
     // showPhoto.
   }

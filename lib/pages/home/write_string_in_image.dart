@@ -38,14 +38,14 @@ class WriteImageInString {
     final chars = string.codeUnits;
     for (var c in chars) {
       if (!font.characters.containsKey(c)) {
-        x += font.base;
+        x += font.base ~/ 2;
         continue;
       }
 
       final ch = font.characters[c]!;
 
-      final x2 = x + 20;
-      final y2 = y + 20;
+      final x2 = x + ch.height;
+      final y2 = y + ch.width;
       var pi = 0;
       for (var yi = y; yi < y2; ++yi) {
         for (var xi = x; xi < x2; ++xi) {
