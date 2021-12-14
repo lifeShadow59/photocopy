@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:copyrightapp/const/svg_const.dart';
+import 'package:copyrightapp/pages/home/write_string_in_image.dart';
 import 'package:copyrightapp/pages/setting/setting.dart';
 import 'package:copyrightapp/pages/show_image/shaow_image.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late File _originalImage;
   late File _watermarkImage;
+
   @override
   void initState() {
     super.initState();
@@ -53,9 +55,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           InkWell(
-                            onTap: () async {
-                              await takeAPhoto();
-                            },
+                            onTap: takeAPhoto,
                             child: const CenterIconWidget(
                               backgroundImage: SVGConst.rectangleBlue,
                               centerdImage: SVGConst.camera,
@@ -92,23 +92,24 @@ class _HomePageState extends State<HomePage> {
         _originalImage = File(image.path);
         _watermarkImage = File(image.path);
       });
+
+      File? withLogo =
+          await setWaterMark(_originalImage, _watermarkImage, "hii");
+      if (withLogo != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ShowImage(
+              showPhoto: withLogo,
+            ),
+          ),
+        );
+      }
     }
     developer.log(
       image?.path ?? 'No picker Any Immage',
       name: 'openGallery Function',
     );
-
-    File? withLogo = await setWaterMark(_originalImage, _watermarkImage, "hii");
-    if (withLogo != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShowImage(
-            showPhoto: withLogo,
-          ),
-        ),
-      );
-    }
   }
 
   Future<File?> setWaterMark(File _originalImage, File _watermarkImage,
@@ -122,23 +123,64 @@ class _HomePageState extends State<HomePage> {
       //* Drow Image
       ui.drawImage(image, watermarkImage);
       //*  setString
+      debugPrint(
+        "originalImage.width => ${originalImage.width}",
+      );
+      debugPrint(
+        "originalImage.height => ${originalImage.height}",
+      );
       ui.drawString(
         originalImage,
-        ui.arial_24,
+        ui.arial_48,
         originalImage.width - 300,
         originalImage.height - 100,
         _waterMarkString,
+        color: 0xFF808080,
+      );
+      ui.Image s = WriteImageInString.drowS(
+        originalImage,
+        ui.arial_48,
+        originalImage.width - 300,
+        originalImage.height - 100,
+        _waterMarkString,
+        color: 0xFF808080,
       );
       final File watermarkedFile =
           File('${(await getTemporaryDirectory()).path}/xyz');
-      await watermarkedFile.writeAsBytes(ui.encodeJpg(originalImage));
+      await watermarkedFile.writeAsBytes(ui.encodeJpg(s));
       return watermarkedFile;
     }
   }
-}
 
-Future<void> takeAPhoto() async {
-  debugPrint("hii");
+  Future<void> takeAPhoto() async {
+    final _imagePicker = ImagePicker();
+    final XFile? image =
+        await _imagePicker.pickImage(source: ImageSource.camera);
+    if (image != null) {
+      debugPrint("Image not null");
+      setState(() {
+        _originalImage = File(image.path);
+        _watermarkImage = File(image.path);
+      });
+
+      File? withLogo =
+          await setWaterMark(_originalImage, _watermarkImage, "hii");
+      if (withLogo != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ShowImage(
+              showPhoto: withLogo,
+            ),
+          ),
+        );
+      }
+    }
+    developer.log(
+      image?.path ?? 'No picker Any Immage',
+      name: 'openGallery Function',
+    );
+  }
 }
 
 class PageAppBar extends StatelessWidget {
