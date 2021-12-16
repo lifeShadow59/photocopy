@@ -1,7 +1,6 @@
 import 'dart:io';
-
+import 'dart:math';
 import 'package:copyrightapp/const/svg_const.dart';
-import 'package:copyrightapp/pages/home/write_string_in_image.dart';
 import 'package:copyrightapp/pages/setting/setting.dart';
 import 'package:copyrightapp/pages/show_image/shaow_image.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +25,9 @@ class _HomePageState extends State<HomePage> {
   late File _originalImage;
   late File _watermarkImage;
   final GetStorage _storage = GetStorage();
+  final ImagePicker _picker = ImagePicker();
+
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -38,116 +40,143 @@ class _HomePageState extends State<HomePage> {
       bottom: true,
       child: Scaffold(
         backgroundColor: const Color(0xFF443FCE),
-        body: Stack(
-          children: [
-            SvgPicture.asset(
-              SVGConst.homeScreenBackground,
-              alignment: Alignment.bottomCenter,
-              // width: MediaQuery.of(context).size.width,
-              fit: BoxFit.cover,
-              height: MediaQuery.of(context).size.height,
-            ),
-            Column(
-              children: [
-                const PageAppBar(),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          InkWell(
-                            onTap: takeAPhoto,
-                            child: const CenterIconWidget(
-                              backgroundImage: SVGConst.rectangleBlue,
-                              centerdImage: SVGConst.camera,
-                              title: "Take a Photo",
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          InkWell(
-                            onTap: openGallery,
-                            child: const CenterIconWidget(
-                              backgroundImage: SVGConst.rectanglYellow,
-                              centerdImage: SVGConst.file,
-                              title: "Open Gallery",
-                            ),
-                          ),
-                        ],
-                      )
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Stack(
+                children: [
+                  SvgPicture.asset(
+                    SVGConst.homeScreenBackground,
+                    alignment: Alignment.bottomCenter,
+                    // width: MediaQuery.of(context).size.width,
+                    fit: BoxFit.cover,
+                    height: MediaQuery.of(context).size.height,
+                  ),
+                  Column(
+                    children: [
+                      const PageAppBar(),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                InkWell(
+                                  onTap: () async {
+                                    await takeAPhoto(context);
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  },
+                                  child: const CenterIconWidget(
+                                    backgroundImage: SVGConst.rectangleBlue,
+                                    centerdImage: SVGConst.camera,
+                                    title: "Take a Photo",
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                InkWell(
+                                  onTap: () async {
+                                    await openGallery(context);
+                                  },
+                                  child: const CenterIconWidget(
+                                    backgroundImage: SVGConst.rectanglYellow,
+                                    centerdImage: SVGConst.file,
+                                    title: "Open Gallery",
+                                  ),
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+      ),
+    );
+  }
+
+  Future<void> openGallery(BuildContext context) async {
+    setState(() {
+      isLoading = true;
+    });
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    setState(() {
+      _originalImage = File(image.path);
+    });
+    developer.log("1");
+    List<String> smsString = await getStringForWaterMark();
+    if (smsString.isEmpty) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShowImage(
+          image: _originalImage,
         ),
       ),
     );
   }
 
-  Future<void> openGallery() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _originalImage = File(image.path);
-        _watermarkImage = File(image.path);
-      });
-
-      File? withLogo =
-          await setWaterMark(_originalImage, _watermarkImage, "hii");
-      if (withLogo != null) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ShowImage(
-              showPhoto: withLogo,
-            ),
-          ),
-        );
-      }
-    }
-    developer.log(
-      image?.path ?? 'No picker Any Immage',
-      name: 'openGallery Function',
-    );
-  }
-
-  Future<String> getStringForWaterMark() async {
-    String text = '';
-    String email = '';
+  Future<List<String>> getStringForWaterMark() async {
+    int itt = 0;
     while (true) {
-      text = _storage.read<String>('text') ?? '';
-      email = _storage.read<String>('email') ?? '';
-      if (text == '') {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const Setting(),
-          ),
-        );
+      if ((_storage.read<String>('text') ?? '') == '' ||
+          ((_storage.read<bool>('emailShow') ?? false) &&
+              (_storage.read<String>('email') ?? '') == '')) {
+        if (itt == 0) {
+          itt = itt + 1;
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const Setting(),
+            ),
+          );
+        } else {
+          return [];
+        }
       } else {
-        break;
+        String waterMarkString = '©Copyright ';
+        int year = DateTime.now().year;
+        return [
+          '$waterMarkString $year ${_storage.read<String>('text') ?? ''}',
+          _storage.read<String>('email') ?? ''
+        ];
       }
     }
-
-    String waterMarkString = '©Copyright ';
-    int year = DateTime.now().year;
-    return 'waterMarkString + $year ';
   }
 
-  Future<File?> setWaterMark(File _originalImage, File _watermarkImage,
-      String _waterMarkString) async {
+  Future<File?> setWaterMark(
+    BuildContext s,
+    File _originalImage,
+    String _waterMarkString,
+    String _email,
+  ) async {
     ui.Image? originalImage = ui.decodeImage(_originalImage.readAsBytesSync());
-    ui.Image? watermarkImage =
-        ui.decodeImage((_watermarkImage.readAsBytesSync()));
-    if (originalImage != null && watermarkImage != null) {
+    developer.log("2.1");
+    // ui.Image? watermarkImage =
+    //     ui.decodeImage((_watermarkImage.readAsBytesSync()));
+    if (originalImage != null) {
       //* Get Height and width
       ui.Image image = ui.Image(originalImage.width, originalImage.height);
       //* Drow Image
-      ui.drawImage(image, watermarkImage);
+      developer.log("2.2");
+
+      ui.drawImage(image, originalImage);
+      developer.log("2.3");
+
       //*  setString
       debugPrint(
         "originalImage.width => ${originalImage.width}",
@@ -155,14 +184,45 @@ class _HomePageState extends State<HomePage> {
       debugPrint(
         "originalImage.height => ${originalImage.height}",
       );
+      developer.log("2.4");
+      const TextStyle style = TextStyle(fontSize: 48);
+
+      TextPainter _waterMarkStringTextPainter = TextPainter()
+        ..text = TextSpan(text: _waterMarkString, style: style)
+        ..textDirection = TextDirection.ltr
+        ..layout(minWidth: 0, maxWidth: double.infinity);
+
+      TextPainter _emailStringTextPainter = TextPainter()
+        ..text = TextSpan(text: _waterMarkString, style: style)
+        ..textDirection = TextDirection.ltr
+        ..layout(minWidth: 0, maxWidth: double.infinity);
+      developer.log("2.5");
+      double waterMarkLength =
+          max(_waterMarkStringTextPainter.width, _emailStringTextPainter.width);
+      developer.log("2.6");
+
       ui.drawString(
         originalImage,
         ui.arial_48,
-        originalImage.width - 300,
-        originalImage.height - 100,
+        originalImage.width - waterMarkLength.toInt(),
+        originalImage.height - 150,
         _waterMarkString,
         color: 0xFF808080,
       );
+      developer.log("2.7");
+
+      if (_email != "") {
+        ui.drawString(
+          originalImage,
+          ui.arial_48,
+          originalImage.width - waterMarkLength.toInt(),
+          originalImage.height - 65,
+          _email,
+          color: 0xFF808080,
+        );
+      }
+      developer.log("2.8");
+
       // ui.Image s = WriteImageInString.drowS(
       //   originalImage,
       //   ui.arial_48,
@@ -175,38 +235,63 @@ class _HomePageState extends State<HomePage> {
       final File watermarkedFile =
           File('${(await getTemporaryDirectory()).path}/$fileName');
       await watermarkedFile.writeAsBytes(ui.encodeJpg(originalImage));
+      developer.log("2.9");
+
       return watermarkedFile;
     }
   }
 
-  Future<void> takeAPhoto() async {
-    final _imagePicker = ImagePicker();
-    final XFile? image =
-        await _imagePicker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      debugPrint("Image not null");
+  Future<void> takeAPhoto(BuildContext context) async {
+    developer.log("1", name: 'get Image');
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    if (image == null) {
+      developer.log("2", name: 'image null');
       setState(() {
-        _originalImage = File(image.path);
-        _watermarkImage = File(image.path);
+        isLoading = false;
       });
-
-      File? withLogo =
-          await setWaterMark(_originalImage, _watermarkImage, "hii");
-      if (withLogo != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ShowImage(
-              showPhoto: withLogo,
-            ),
-          ),
-        );
-      }
+      return;
     }
-    developer.log(
-      image?.path ?? 'No picker Any Immage',
-      name: 'openGallery Function',
+    developer.log("2", name: 'Image not null');
+    setState(() {
+      _originalImage = File(image.path);
+    });
+    developer.log("3", name: '_original Image set');
+    developer.log("4", name: 'get sms String');
+    List<String> smsString = await getStringForWaterMark();
+    developer.log("5", name: 'get sms String complate');
+    if (smsString.isEmpty) {
+      developer.log("6", name: 'sms String empty');
+
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    developer.log("6", name: 'sms String not empty');
+    developer.log("7", name: 'navigation push start');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShowImage(
+          image: _originalImage,
+        ),
+      ),
     );
+    developer.log("8", name: 'navigation push complate');
+
+    // File? withLogo =
+    //     await setWaterMark(context, _originalImage, smsString[0], smsString[1]);
+    // if (withLogo != null) {
+    //   setState(() {
+    //     isLoading = false;
+    //   });
+    // }
+
+    // developer.log(
+    //   image?.path ?? 'No picker Any Immage',
+    //   name: 'openGallery Function',
+    // );
   }
 }
 
